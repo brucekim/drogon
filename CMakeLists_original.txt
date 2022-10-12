@@ -2,34 +2,6 @@ cmake_minimum_required(VERSION 3.5)
 
 project(drogon)
 
-#set(LOCAL_PATH 
-if (NOT DEFINED LOCAL_PATH)
-    message(STATUS "LOCAL_PATH should be given, which holds ndk tool chains and uuid built")
-    return()
-endif()
-    
-
-#set(CMAKE_SYSTEM_NAME Android)
-#set(CMAKE_SYSTEM_VERSION 21)
-#set(CMAKE_ANDROID_ARCH_ABI arm64-v8a)
-#set(CMAKE_ANDROID_NDK "${LOCAL_PATH}/Library/Android/sdk/ndk/25.1.8937393")
-#set(CMAKE_ANDROID_STL_TYPE gnustl_static)
-
-find_package(Boost 1.61.0
-    REQUIRED
-    COMPONENTS system filesystem
-)
-if(Boost_FOUND)
-    message(STATUS "found boost")
-endif()
-
-set(Boost_USE_STATIC_LIBS OFF)
-
-# uuid
-INCLUDE_DIRECTORIES( ${LOCAL_PATH}/bin/libuuid/include/uuid )
-LINK_DIRECTORIES( ${LOCAL_PATH}/bin/libuuid/lib )
-    
-
 message(STATUS "compiler: " ${CMAKE_CXX_COMPILER_ID})
 
 # If your cross compile is failing, you should set
@@ -42,11 +14,11 @@ endif ()
 
 option(BUILD_CTL "Build drogon_ctl" ${BUILD_PROGRAMS})
 option(BUILD_EXAMPLES "Build examples" ${BUILD_PROGRAMS})
-option(BUILD_ORM "Build orm" OFF)
+option(BUILD_ORM "Build orm" ON)
 option(COZ_PROFILING "Use coz for profiling" OFF)
 option(BUILD_SHARED_LIBS "Build drogon as a shared lib" OFF)
 option(BUILD_DOC "Build Doxygen documentation" OFF)
-option(BUILD_BROTLI "Build Brotli" OFF)
+option(BUILD_BROTLI "Build Brotli" ON)
 
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(BUILD_POSTGRESQL "Build with postgresql support" ON "BUILD_ORM" OFF)
@@ -229,28 +201,28 @@ find_package(Jsoncpp REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Jsoncpp_lib)
 list(APPEND INCLUDE_DIRS_FOR_DYNAMIC_VIEW ${JSONCPP_INCLUDE_DIRS})
 
-#if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD"
-#    AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD"
-#    AND NOT WIN32)
-#    find_package(UUID REQUIRED)
-#    target_link_libraries(${PROJECT_NAME} PRIVATE UUID_lib)
-#
-#    try_compile(normal_uuid ${CMAKE_BINARY_DIR}/cmaketest
-#        ${PROJECT_SOURCE_DIR}/cmake/tests/normal_uuid_lib_test.cc
-#        LINK_LIBRARIES UUID_lib)
-#    try_compile(ossp_uuid ${CMAKE_BINARY_DIR}/cmaketest
-#        ${PROJECT_SOURCE_DIR}/cmake/tests/ossp_uuid_lib_test.cc
-#        LINK_LIBRARIES UUID_lib)
-#    if (normal_uuid)
-#        add_definitions(-DUSE_OSSP_UUID=0)
-#    elseif (ossp_uuid)
-#        add_definitions(-DUSE_OSSP_UUID=1)
-#    else ()
-#        message(FATAL_ERROR "uuid lib error")
-#    endif ()
-#endif (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD"
-#    AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD"
-#    AND NOT WIN32)
+if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD"
+    AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD"
+    AND NOT WIN32)
+    find_package(UUID REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE UUID_lib)
+
+    try_compile(normal_uuid ${CMAKE_BINARY_DIR}/cmaketest
+        ${PROJECT_SOURCE_DIR}/cmake/tests/normal_uuid_lib_test.cc
+        LINK_LIBRARIES UUID_lib)
+    try_compile(ossp_uuid ${CMAKE_BINARY_DIR}/cmaketest
+        ${PROJECT_SOURCE_DIR}/cmake/tests/ossp_uuid_lib_test.cc
+        LINK_LIBRARIES UUID_lib)
+    if (normal_uuid)
+        add_definitions(-DUSE_OSSP_UUID=0)
+    elseif (ossp_uuid)
+        add_definitions(-DUSE_OSSP_UUID=1)
+    else ()
+        message(FATAL_ERROR "uuid lib error")
+    endif ()
+endif (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD"
+    AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD"
+    AND NOT WIN32)
 
 if (BUILD_BROTLI)
     find_package(Brotli)
@@ -494,9 +466,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ZLIB::ZLIB)
 find_package(OpenSSL)
 if (OpenSSL_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto)
-    message(STATUS "Found OpenSSL")
 else (OpenSSL_FOUND)
-    message(STATUS "Not found OpenSSL")
     set(DROGON_SOURCES
         ${DROGON_SOURCES}
         lib/src/ssl_funcs/Md5.cc
