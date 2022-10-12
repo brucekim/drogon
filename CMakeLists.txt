@@ -4,7 +4,7 @@ project(drogon)
 
 #set(LOCAL_PATH 
 if (NOT DEFINED LOCAL_PATH)
-    message(STATUS "LOCAL_PATH should be given, which holds ndk tool chains and uuid built")
+    message(FATAL_ERROR "LOCAL_PATH should be given, which holds ndk tool chains and uuid built")
     return()
 endif()
     
